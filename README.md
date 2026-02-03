@@ -30,6 +30,13 @@
 
 ## 📦 Installation
 
+### Via Homebrew (Recommended for macOS/Linux)
+
+```bash
+brew tap songqii/tap https://github.com/songqii/go_base_temp
+brew install gofiber-creator
+```
+
 ### Via Go Install
 
 ```bash

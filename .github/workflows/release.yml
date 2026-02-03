@@ -42,6 +42,28 @@ jobs:
         run: |
           GOOS=linux GOARCH=amd64 go build -ldflags "-X github.com/halfhuman88/gofiber-creator/cmd.Version=${{ steps.get_version.outputs.VERSION }}" -o gofiber-creator-linux-amd64 .
 
+      - name: Calculate SHA256
+        id: sha
+        run: |
+          echo "SHA_ARM64=$(shasum -a 256 gofiber-creator-darwin-arm64 | awk '{print $1}')" >> $GITHUB_OUTPUT
+          echo "SHA_AMD64=$(shasum -a 256 gofiber-creator-darwin-amd64 | awk '{print $1}')" >> $GITHUB_OUTPUT
+          echo "SHA_LINUX=$(shasum -a 256 gofiber-creator-linux-amd64 | awk '{print $1}')" >> $GITHUB_OUTPUT
+
+      - name: Update Homebrew Formula
+        run: |
+          sed -i "s/version \".*\"/version \"${{ steps.get_version.outputs.VERSION }}\"/" Formula/gofiber-creator.rb
+          sed -i "s/PLACEHOLDER_ARM64/${{ steps.sha.outputs.SHA_ARM64 }}/" Formula/gofiber-creator.rb
+          sed -i "s/PLACEHOLDER_AMD64/${{ steps.sha.outputs.SHA_AMD64 }}/" Formula/gofiber-creator.rb
+          sed -i "s/PLACEHOLDER_LINUX/${{ steps.sha.outputs.SHA_LINUX }}/" Formula/gofiber-creator.rb
+
+      - name: Commit Formula update
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add Formula/gofiber-creator.rb
+          git commit -m "chore: update formula for v${{ steps.get_version.outputs.VERSION }}" || echo "No changes to commit"
+          git push origin HEAD:main
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
