@@ -1,0 +1,9 @@
+# Binary
+gofiber-creator
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
