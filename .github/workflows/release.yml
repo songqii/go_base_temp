@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Build for macOS (amd64)
+        run: |
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-X github.com/halfhuman88/gofiber-creator/cmd.Version=${{ steps.get_version.outputs.VERSION }}" -o gofiber-creator-darwin-amd64 .
+
+      - name: Build for macOS (arm64)
+        run: |
+          GOOS=darwin GOARCH=arm64 go build -ldflags "-X github.com/halfhuman88/gofiber-creator/cmd.Version=${{ steps.get_version.outputs.VERSION }}" -o gofiber-creator-darwin-arm64 .
+
+      - name: Build for Windows (amd64)
+        run: |
+          GOOS=windows GOARCH=amd64 go build -ldflags "-X github.com/halfhuman88/gofiber-creator/cmd.Version=${{ steps.get_version.outputs.VERSION }}" -o gofiber-creator-windows-amd64.exe .
+
+      - name: Build for Linux (amd64)
+        run: |
+          GOOS=linux GOARCH=amd64 go build -ldflags "-X github.com/halfhuman88/gofiber-creator/cmd.Version=${{ steps.get_version.outputs.VERSION }}" -o gofiber-creator-linux-amd64 .
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            gofiber-creator-darwin-amd64
+            gofiber-creator-darwin-arm64
+            gofiber-creator-windows-amd64.exe
+            gofiber-creator-linux-amd64
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
